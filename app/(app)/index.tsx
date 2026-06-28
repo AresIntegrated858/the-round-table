@@ -9,15 +9,19 @@ import {
   LOCAL_TABLES,
   WEEKLY_MISSION,
 } from '@/lib/roundTableModel';
-import type { SundayPlan } from '@/lib/roundTableEngine';
+import type { CampaignPhaseId, SundayPlan } from '@/lib/roundTableEngine';
 
 export default function CommandCenter() {
-  const { profile, tier } = useAuth();
+  const { profile } = useAuth();
   const {
     sundayPlan,
     missionActions,
     localTable,
     wins,
+    oath,
+    seatStatus,
+    campaignPhases,
+    brotherCard,
     saveSundayPlan,
     commandScore,
   } = useRoundTableStore();
@@ -26,7 +30,9 @@ export default function CommandCenter() {
     ? getPathById(profile.transformation_path)
     : getPathById('foundation-path');
   const score = commandScore();
+  const card = brotherCard();
   const completedMissions = Object.values(missionActions).filter(Boolean).length;
+  const completedPhases = Object.values(campaignPhases).filter((phase) => phase.completed).length;
 
   useEffect(() => {
     track('feed_viewed');
@@ -39,7 +45,7 @@ export default function CommandCenter() {
   return (
     <ScrollView
       className="flex-1 bg-charcoal"
-      contentContainerClassName="mx-auto w-full max-w-5xl px-6 pt-12 pb-12"
+      contentContainerClassName="mx-auto w-full max-w-6xl px-6 pt-12 pb-12"
     >
       <Text className="font-body text-brass text-xs tracking-widest">
         COMMAND CENTER
@@ -48,20 +54,17 @@ export default function CommandCenter() {
         Welcome{profile?.display_name ? `, ${profile.display_name}` : ''}.
       </Text>
       <Text className="mt-3 font-body text-ivory-dim text-sm leading-6">
-        You are seated as a {tier ?? 'founding'} member. Your first job is to
-        prove consistency before chasing status.
+        You are seated as {articleFor(seatStatus)} {seatStatus}. Payment opens the
+        door. Conduct keeps the seat.
       </Text>
 
       <View className="mt-8 rounded-2xl border border-brass/30 bg-brass/10 p-5">
-        <Text className="font-body text-brass text-xs tracking-widest">
-          DAILY STANDARD
-        </Text>
-        <Text className="mt-3 font-display text-ivory text-2xl leading-8">
-          No performance. No overtalking. Establish the truth, then move.
-        </Text>
-        <Text className="mt-3 font-body text-ivory-dim text-xs">
-          Council standard
-        </Text>
+        <View className="gap-4 md:flex-row">
+          <Metric label="Seat" value={seatStatus.toUpperCase()} />
+          <Metric label="Command score" value={`${score}/100`} />
+          <Metric label="Campaign" value={`${completedPhases}/4`} />
+          <Metric label="Oath" value={oath.accepted ? 'SWORN' : 'OPEN'} />
+        </View>
       </View>
 
       <View className="mt-6 gap-4 md:flex-row">
@@ -73,10 +76,54 @@ export default function CommandCenter() {
         </Panel>
       </View>
 
-      <View className="mt-6 gap-4 md:flex-row">
-        <Metric label="Command score" value={`${score}/100`} />
-        <Metric label="Mission proof" value={`${completedMissions}/4`} />
-        <Metric label="Local table" value={localTable ?? 'Unset'} />
+      <View className="mt-6 rounded-2xl border border-ivory-dim/15 bg-charcoal-800 p-5">
+        <Text className="font-body text-ivory-dim text-xs tracking-widest">
+          BROTHER CARD
+        </Text>
+        <Text className="mt-2 font-display text-ivory text-3xl">
+          {card.displayName}
+        </Text>
+        <Text className="mt-2 font-body text-ivory-dim text-sm leading-6">
+          {card.location} / {card.age} / strongest signal: {card.strongest}
+        </Text>
+        <Text className="mt-3 font-body text-brass text-sm leading-6">
+          Hard problem: {card.hardProblem}
+        </Text>
+        <View className="mt-4 gap-3 md:flex-row">
+          <MiniStat label="Proof" value={`${card.proofCount}`} />
+          <MiniStat label="Contribution" value={`${card.contributionCount}`} />
+          <MiniStat label="Local table" value={card.localTable ?? 'Unset'} />
+        </View>
+      </View>
+
+      <View className="mt-6 rounded-2xl border border-ivory-dim/15 bg-charcoal-800 p-5">
+        <Text className="font-body text-ivory-dim text-xs tracking-widest">
+          90-DAY CAMPAIGN MAP
+        </Text>
+        <Text className="mt-2 font-display text-ivory text-2xl">
+          Advancement requires proof.
+        </Text>
+        <View className="mt-5 gap-3">
+          {FIRST_CAMPAIGN.weeks.map((week) => {
+            const phase = campaignPhases[week.id as CampaignPhaseId];
+            return (
+              <View
+                key={week.id}
+                className={`rounded-xl border p-4 ${
+                  phase.completed ? 'border-brass bg-brass/10' : 'border-ivory-dim/15 bg-charcoal'
+                }`}
+              >
+                <Text className="font-body text-brass text-xs tracking-widest">
+                  {week.window.toUpperCase()} / {phase.completed ? 'CLEARED' : 'LOCKED BY PROOF'}
+                </Text>
+                <Text className="mt-2 font-display text-ivory text-xl">{week.title}</Text>
+                <Text className="mt-2 font-body text-ivory-dim text-sm leading-6">
+                  {week.gate}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
       </View>
 
       <View className="mt-6 rounded-2xl border border-ivory-dim/15 bg-charcoal-800 p-5">
@@ -104,52 +151,23 @@ export default function CommandCenter() {
         </Pressable>
       </View>
 
-      <View className="mt-6 rounded-2xl border border-ivory-dim/15 bg-charcoal-800 p-5">
-        <Text className="font-body text-ivory-dim text-xs tracking-widest">
-          ACTIVE MISSION
-        </Text>
-        <Text className="mt-2 font-display text-ivory text-2xl">
-          {WEEKLY_MISSION.title}
-        </Text>
-        <Text className="mt-2 font-body text-ivory-dim text-sm leading-6">
-          {WEEKLY_MISSION.standard}
-        </Text>
-        <View className="mt-4 gap-2">
-          {WEEKLY_MISSION.actions.map((action, index) => (
-            <Text key={action} className="font-body text-ivory text-sm leading-6">
-              {missionActions[`mission-${index}`] ? 'Complete' : 'Open'} - {action}
-            </Text>
-          ))}
-        </View>
-      </View>
-
-      <View className="mt-6 rounded-2xl border border-ivory-dim/15 bg-charcoal-800 p-5">
-        <Text className="font-body text-ivory-dim text-xs tracking-widest">
-          LOCAL TABLE PROMPT
-        </Text>
-        <Text className="mt-2 font-display text-ivory text-2xl">
-          Start local, build real.
-        </Text>
-        <Text className="mt-2 font-body text-ivory-dim text-sm leading-6">
+      <View className="mt-6 gap-4 md:flex-row">
+        <Panel eyebrow="ACTIVE MISSION" title={WEEKLY_MISSION.title}>
+          {completedMissions}/4 actions complete. {WEEKLY_MISSION.standard}
+        </Panel>
+        <Panel eyebrow="LOCAL TABLE" title={localTable ?? 'Unset'}>
           First U.S. local tables are forming in {LOCAL_TABLES.slice(0, 3).map((table) => table.region).join(', ')}.
-          Current selection: {localTable ?? 'none'}.
-        </Text>
-      </View>
-
-      <View className="mt-6 rounded-2xl border border-ivory-dim/15 bg-charcoal-800 p-5">
-        <Text className="font-body text-ivory-dim text-xs tracking-widest">
-          RECENT MEMBER WINS
-        </Text>
-        <View className="mt-3 gap-2">
-          {(wins.length ? wins : ['No wins logged yet. Add one in Standards.']).map((win) => (
-            <Text key={win} className="font-body text-ivory text-sm leading-6">
-              - {win}
-            </Text>
-          ))}
-        </View>
+        </Panel>
+        <Panel eyebrow="LATEST WIN" title={wins[0] ?? 'No win logged'}>
+          Wins become public proof in the room and feed ranking momentum.
+        </Panel>
       </View>
     </ScrollView>
   );
+}
+
+function articleFor(value: string) {
+  return ['applicant', 'initiate'].includes(value) ? 'an' : 'a';
 }
 
 function Panel({
@@ -172,11 +190,22 @@ function Panel({
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <View className="flex-1 rounded-2xl border border-ivory-dim/15 bg-charcoal-800 p-5">
-      <Text className="font-body text-ivory-dim text-xs tracking-widest">
+    <View className="flex-1">
+      <Text className="font-body text-brass text-xs tracking-widest">
         {label.toUpperCase()}
       </Text>
-      <Text className="mt-2 font-display text-brass text-3xl">{value}</Text>
+      <Text className="mt-2 font-display text-ivory text-3xl">{value}</Text>
+    </View>
+  );
+}
+
+function MiniStat({ label, value }: { label: string; value: string }) {
+  return (
+    <View className="flex-1 rounded-xl border border-ivory-dim/15 bg-charcoal px-4 py-3">
+      <Text className="font-body text-ivory-dim text-[10px] tracking-widest">
+        {label.toUpperCase()}
+      </Text>
+      <Text className="mt-1 font-display text-brass text-xl">{value}</Text>
     </View>
   );
 }

@@ -45,10 +45,24 @@ export default function AppLayout() {
         }}
       />
       <Tabs.Screen
+        name="brotherhood"
+        options={{
+          title: 'ROOM',
+          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>◈</Text>,
+        }}
+      />
+      <Tabs.Screen
         name="standards"
         options={{
           title: 'STANDARDS',
           tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>□</Text>,
+        }}
+      />
+      <Tabs.Screen
+        name="rankings"
+        options={{
+          title: 'RANKS',
+          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>△</Text>,
         }}
       />
       <Tabs.Screen

@@ -16,8 +16,21 @@ const CODE = [
 
 export default function StandardsTab() {
   const { profile } = useAuth();
-  const { scores, setPillarScore, wins, addWin, commandScore } = useRoundTableStore();
+  const {
+    scores,
+    seatStatus,
+    oath,
+    setSeatStatus,
+    acceptOath,
+    setPillarScore,
+    wins,
+    addWin,
+    commandScore,
+  } = useRoundTableStore();
   const [winDraft, setWinDraft] = useState('');
+  const [oathDraft, setOathDraft] = useState(
+    'I will show up, tell the truth, take action, keep confidence, receive correction, and contribute to the room.',
+  );
   const path = profile?.transformation_path
     ? getPathById(profile.transformation_path)
     : getPathById('foundation-path');
@@ -45,13 +58,43 @@ export default function StandardsTab() {
 
       <View className="mt-8 rounded-2xl border border-brass/30 bg-brass/10 p-5">
         <Text className="font-body text-brass text-xs tracking-widest">
-          MEMBER OATH
+          MEMBER OATH CEREMONY
+        </Text>
+        <Text className="mt-2 font-display text-ivory text-3xl">
+          {oath.accepted ? 'Oath sworn.' : 'The threshold is open.'}
         </Text>
         <Text className="mt-3 font-body text-ivory text-base leading-7">
-          I enter The Round Table by choice. I will show up, tell the truth,
-          take action, keep confidence, receive correction, and contribute to
-          the room. Access is earned by conduct, not payment alone.
+          {oath.accepted
+            ? oath.declaration
+            : 'I enter The Round Table by choice. Access is earned by conduct, not payment alone.'}
         </Text>
+        {!oath.accepted ? (
+          <>
+            <TextInput
+              value={oathDraft}
+              onChangeText={setOathDraft}
+              placeholder="Write your oath plainly."
+              placeholderTextColor="#7A7466"
+              multiline
+              className="mt-4 min-h-[96px] rounded-xl border border-brass/30 bg-charcoal px-4 py-4 font-body text-ivory"
+            />
+            <Pressable
+              onPress={() => {
+                acceptOath(oathDraft);
+                setSeatStatus('initiate');
+              }}
+              className="mt-4 rounded-xl bg-brass px-5 py-4 active:opacity-80"
+            >
+              <Text className="text-center font-display text-charcoal text-sm tracking-wider">
+                SWEAR THE OATH
+              </Text>
+            </Pressable>
+          </>
+        ) : (
+          <Text className="mt-3 font-body text-brass text-xs tracking-widest">
+            SEAT STATUS: {seatStatus.toUpperCase()}
+          </Text>
+        )}
       </View>
 
       <View className="mt-6 gap-4 md:flex-row">

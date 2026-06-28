@@ -272,24 +272,32 @@ export const FIRST_CAMPAIGN = {
   subtitle: 'The first 90 days from applicant to active brother.',
   weeks: [
     {
+      id: 'threshold',
       title: 'The Threshold',
       window: 'Days 1-7',
       mission: 'Take the oath, complete your baseline, declare standards, and post your first introduction.',
+      gate: 'Oath accepted, baseline declared, first proof posted.',
     },
     {
+      id: 'foundation',
       title: 'The Foundation',
       window: 'Days 8-30',
       mission: 'Build Sunday planning, complete weekly missions, and prove basic consistency.',
+      gate: 'Sunday planning rhythm, weekly mission proof, first brotherhood contribution.',
     },
     {
+      id: 'chosen-path',
       title: 'The Chosen Path',
       window: 'Days 31-60',
       mission: 'Hard-track your assigned path and bring weekly proof to the room.',
+      gate: 'Chosen-path proof, visible progress, request or support given to a brother.',
     },
     {
+      id: 'standard',
       title: 'The Standard',
       window: 'Days 61-90',
       mission: 'Review proof, build one local or brotherhood connection, and choose the next campaign.',
+      gate: 'Council review, local signal, next-seat decision.',
     },
   ],
 };
