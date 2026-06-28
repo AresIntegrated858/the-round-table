@@ -2,6 +2,8 @@
 
 > Milestones M0 → M5. No time estimates per founder rule. Each milestone has a binary "done" gate. Dependencies named.
 
+> **2026-06-27 founder override:** Do not implement this plan as-is until it is reconciled with `docs/superpowers/specs/2026-06-27-round-table-mvp-design.md`. Current MVP priority is a responsive web app that feels mobile-native, with application approval, oath, onboarding diagnostic, path assignment, Member / Command / Council tiers, U.S. local sections, public progress/rankings, and a $25/month founding subscription with a 90-day minimum.
+
 ---
 
 ## Critical-path scope for first submission

@@ -63,10 +63,21 @@ export default function Settings() {
       <Row label="Email" value={user?.email ?? '—'} />
       <Row label="Tier" value={tier ? TIERS[tier].name : 'None'} />
       <Row label="Cohort" value={profile?.cohort ?? '—'} />
+      <Row label="Path" value={profile?.transformation_path ?? '—'} />
       <Row
         label="Code signed"
         value={profile?.honor_code_signed_at ? new Date(profile.honor_code_signed_at).toDateString() : '—'}
       />
+
+      <View className="mt-8 rounded-2xl border border-brass/30 bg-brass/10 p-5">
+        <Text className="font-display text-ivory text-xl">MVP launch status</Text>
+        <Text className="mt-2 font-body text-ivory-dim text-sm leading-6">
+          This local build demonstrates the approved responsive web MVP:
+          application, oath, diagnostic, path assignment, founding offer,
+          command center, missions, pillar rooms, local tables, and scorecard.
+          Production payments remain blocked on Stripe/RevenueCat/store setup.
+        </Text>
+      </View>
 
       <View className="mt-10 gap-3">
         <ActionButton label="Manage subscription" onPress={manageSubscription} />
@@ -105,7 +116,7 @@ function ActionButton({ label, onPress }: { label: string; onPress: () => void }
   return (
     <Pressable
       onPress={onPress}
-      className="rounded-xl border border-ivory-dim/20 bg-charcoal-50 px-5 py-4 active:opacity-70"
+      className="rounded-xl border border-ivory-dim/20 bg-charcoal-800 px-5 py-4 active:opacity-70"
     >
       <Text className="font-body text-ivory text-base">{label}</Text>
     </Pressable>
@@ -114,7 +125,6 @@ function ActionButton({ label, onPress }: { label: string; onPress: () => void }
 
 async function ask(title: string, message: string): Promise<boolean> {
   if (Platform.OS === 'web') {
-    // eslint-disable-next-line no-alert
     return window.confirm(`${title}\n\n${message}`);
   }
   return new Promise((resolve) => {

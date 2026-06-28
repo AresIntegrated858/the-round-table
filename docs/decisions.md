@@ -159,3 +159,44 @@
 ```
 
 Date-stamp every new section header. Never mutate prior entries; append a new entry that supersedes if a decision changes.
+
+---
+
+## 2026-06-27 — Founder interview override
+
+### D-036 · Current MVP target = responsive web app that feels mobile-native
+- **Alternatives considered:** Native mobile first; web-only desktop app.
+- **Chosen:** Responsive web MVP with mobile-native feel, built in the current Expo/React Native Web repo.
+- **Why:** Gets the community launched before app store packaging while preserving the long-term one-codebase mobile direction.
+
+### D-037 · Current offer = $25/month founding subscription
+- **Supersedes:** D-009 and D-012 where they conflict.
+- **Chosen:** $25/month founding subscription, application approval before payment, 90-day minimum commitment, month-to-month after 90 days, lifetime founding price lock while active.
+- **Why:** Keeps the first version low-ticket and accessible while still forcing commitment and protecting culture.
+
+### D-038 · Tier language = Member / Command / Council
+- **Supersedes:** New Member / Knight / Council public tier language where it conflicts.
+- **Chosen:** Modern tier names: Member, Command, Council.
+- **Why:** Preserves status and progression without making the brand feel like costume medieval roleplay.
+
+### D-039 · Founding audience = young men roughly 18-27 plus broader serious men
+- **Chosen:** Speak first to young men trying to level up, including men who are lost but serious about changing.
+- **Anti-member:** victim mindset, no work ethic, dishonesty, disrespect, drama, promotion-first behavior.
+- **Why:** The first room should be accessible to men who need structure, but intolerant of defended weakness.
+
+### D-040 · Council expertise = John, Manny, Chase, Erik
+- **Supersedes:** D-005 and D-031 where they conflict.
+- **Chosen:** Council-led experience using John Maciel, Manny Thompson, Chase Grafton, and Erik Sims as the known expertise map from the vault.
+- **Why:** Matches the 2026-06-27 founder interview and the current vault entity for The Round Table.
+
+### D-041 · Onboarding diagnostic assigns a branded transformation path
+- **Chosen:** Applications and onboarding determine a member's primary transformation path, with hard tracking for chosen pillars and soft tracking across all life-command areas.
+- **Why:** Members need a structured route into progress, not a generic library dump.
+
+### D-042 · Brotherhood is the umbrella pillar
+- **Chosen:** Brotherhood is the identity layer over body, money, style, relationships, time, business, leadership, communication, mental discipline, and high-value networking.
+- **Why:** The Round Table is a room and a standard first; individual pillars sit under the brotherhood.
+
+### D-043 · Culture enforcement = warning then removal
+- **Chosen:** Core rule path is warning then removal, with council discretion for severe violations.
+- **Why:** Low-ticket communities need simple enforcement to avoid culture decay.

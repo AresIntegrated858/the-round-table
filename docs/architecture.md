@@ -2,6 +2,8 @@
 
 > Stack pre-approved by user (Expo Router + React Native Web + Supabase). This document locks the decisions, names trade-offs, and pins the data model.
 
+> **2026-06-27 founder override:** Expo Router + React Native Web remains the right technical direction, but product assumptions in this document should be reconciled with `docs/superpowers/specs/2026-06-27-round-table-mvp-design.md` before implementation. Current MVP is responsive web first, mobile-native feel, with downloadable mobile apps later.
+
 ---
 
 ## 1. Stack decision matrix

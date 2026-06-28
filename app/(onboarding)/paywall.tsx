@@ -16,8 +16,10 @@ import { track } from '@/lib/posthog';
  * Web pricing is never named inside the iOS app.
  */
 export default function Paywall() {
-  const { refreshTier } = useAuth();
-  const [selected, setSelected] = useState<TierId>('knight');
+  const refreshTier = useAuth((s) => s.refreshTier);
+  const demo = useAuth((s) => s.demo);
+  const demoAdvance = useAuth((s) => s.demoAdvance);
+  const [selected, setSelected] = useState<TierId>('member');
   const [busy, setBusy] = useState(false);
 
   const showWebPricing = Platform.OS === 'web';
@@ -26,11 +28,19 @@ export default function Paywall() {
     setBusy(true);
     track('paywall_viewed', { tier: selected });
     try {
-      // TODO(M0.1): Wire actual purchase.
-      //   - iOS / Android: Purchases.purchasePackage(...)
-      //   - Web: Stripe checkout via RC web SDK or our own /api/checkout edge fn.
-      // For now, refresh tier state and let the auth router decide.
-      await refreshTier();
+      if (demo) {
+        // In demo mode, "purchase" simply flips the tier state so the
+        // AuthRouter promotes us into (app)/.
+        demoAdvance({
+          tier: selected,
+          cohort: 'founding_2026',
+        });
+      } else {
+        // TODO(M0.1): Wire actual purchase.
+        //   - iOS / Android: Purchases.purchasePackage(...)
+        //   - Web: Stripe checkout via RC web SDK or our own /api/checkout edge fn.
+        await refreshTier();
+      }
     } finally {
       setBusy(false);
     }
@@ -40,10 +50,12 @@ export default function Paywall() {
     <View className="flex-1 bg-charcoal">
       <ScrollView contentContainerClassName="px-6 pt-24 pb-12">
         <Text className="font-display text-ivory text-3xl tracking-wide">
-          Take your seat
+          Confirm your founding seat
         </Text>
         <Text className="mt-3 font-body text-ivory-dim text-sm leading-5">
-          Three tiers. Everyone gets the table. Depth and access scale up.
+          Application approval comes before payment. Founding members begin at
+          $25/month, commit for the first 90 days, then continue month to
+          month with their founding price locked while active.
         </Text>
 
         <View className="mt-8 gap-4">
@@ -58,7 +70,7 @@ export default function Paywall() {
                 className={`rounded-2xl border p-5 ${
                   isSel
                     ? 'border-brass bg-brass/10'
-                    : 'border-ivory-dim/20 bg-charcoal-50'
+                    : 'border-ivory-dim/20 bg-charcoal-800'
                 }`}
               >
                 <View className="flex-row items-baseline justify-between">
@@ -73,10 +85,10 @@ export default function Paywall() {
                 <Text className="mt-2 font-body text-ivory-dim text-sm leading-5">
                   {t.tagline}
                 </Text>
-                {id === 'knight' && (
+                {id === 'member' && (
                   <View className="mt-3 self-start rounded-full border border-brass/40 bg-brass/10 px-2.5 py-1">
                     <Text className="font-body text-brass text-[10px] tracking-widest">
-                      FOUNDING KNIGHT · 50 SEATS · RATE-LOCKED $20/MO ×12
+                      FOUNDING SEAT · FIRST 25 · CAP AT 50 · $25 LOCKED
                     </Text>
                   </View>
                 )}
@@ -94,9 +106,9 @@ export default function Paywall() {
         )}
 
         <Text className="mt-6 font-body text-ivory-dim text-xs leading-5">
-          Subscription auto-renews until cancelled. Manage or cancel anytime in
-          your platform's subscription settings. By subscribing you agree to
-          the Terms of Service and Privacy Policy.
+          The first 90 days are a minimum commitment to protect the culture.
+          After that, membership is month to month. By subscribing you agree to
+          the Terms of Service, Privacy Policy, and member code.
         </Text>
       </ScrollView>
 

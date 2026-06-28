@@ -4,44 +4,57 @@ import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
 import { track } from '@/lib/posthog';
+import {
+  assignPathFromDiagnostic,
+  PILLARS,
+  type DiagnosticAnswers,
+} from '@/lib/roundTableModel';
 
-/**
- * Ritual Step 3 — Standards declaration. The user declares 1–5 personal
- * standards, each tagged to one of the 7 pillars. Minimum 1 to proceed.
- * Each statement is hard-capped at 140 chars.
- *
- * Pillars are canonical from product-brief.md §3.
- */
-
-const PILLARS = [
-  'Fitness',
-  'Investing',
-  'Style',
-  'Relationship Building',
-  'Time Management',
-  'Business Building',
-  'Leadership',
-] as const;
-type Pillar = (typeof PILLARS)[number];
+const PILLAR_OPTIONS = PILLARS.slice(0, 8).map((pillar) => pillar.title);
+type Pillar = (typeof PILLAR_OPTIONS)[number];
 
 type Row = { pillar: Pillar; statement: string };
 
 const MAX_ROWS = 5;
 const MAX_CHARS = 140;
 
+const DIAGNOSTIC_ITEMS = [
+  ['body', 'Body'],
+  ['money', 'Money'],
+  ['time', 'Time'],
+  ['relationships', 'Relationships'],
+  ['business', 'Business'],
+  ['presence', 'Presence'],
+] as const;
+
 export default function Standards() {
   const router = useRouter();
-  const { user, refreshProfile } = useAuth();
+  const user = useAuth((s) => s.user);
+  const refreshProfile = useAuth((s) => s.refreshProfile);
+  const demo = useAuth((s) => s.demo);
+  const demoAdvance = useAuth((s) => s.demoAdvance);
   const [rows, setRows] = useState<Row[]>([{ pillar: 'Leadership', statement: '' }]);
+  const [diagnostic, setDiagnostic] = useState<DiagnosticAnswers>({
+    body: 0,
+    money: 0,
+    time: 0,
+    relationships: 0,
+    business: 0,
+    presence: 0,
+  });
   const [saving, setSaving] = useState(false);
+
+  const assignedPath = assignPathFromDiagnostic(diagnostic);
 
   function updateRow(i: number, patch: Partial<Row>) {
     setRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
   }
+
   function addRow() {
     if (rows.length >= MAX_ROWS) return;
-    setRows((prev) => [...prev, { pillar: 'Fitness', statement: '' }]);
+    setRows((prev) => [...prev, { pillar: 'Body', statement: '' }]);
   }
+
   function removeRow(i: number) {
     if (rows.length <= 1) return;
     setRows((prev) => prev.filter((_, idx) => idx !== i));
@@ -57,21 +70,28 @@ export default function Standards() {
         .filter((r) => r.statement.trim().length > 0)
         .map((r) => ({
           profile_id: user.id,
-          pillar: r.pillar.toLowerCase().replace(/ /g, '_'),
+          pillar: r.pillar.toLowerCase().replace(/ /g, '_').replace(/and/g, 'and'),
           statement: r.statement.trim().slice(0, MAX_CHARS),
         }));
+      const stamp = new Date().toISOString();
 
-      const { error: insertErr } = await supabase.from('profile_standards').insert(payload);
-      if (insertErr) throw insertErr;
+      if (demo) {
+        demoAdvance({
+          standards_declared_at: stamp,
+          transformation_path: assignedPath.id,
+        });
+      } else {
+        const { error: insertErr } = await supabase.from('profile_standards').insert(payload);
+        if (insertErr) throw insertErr;
+        const { error: profErr } = await supabase
+          .from('profiles')
+          .update({ standards_declared_at: stamp })
+          .eq('id', user.id);
+        if (profErr) throw profErr;
+        await refreshProfile();
+      }
 
-      const { error: profErr } = await supabase
-        .from('profiles')
-        .update({ standards_declared_at: new Date().toISOString() })
-        .eq('id', user.id);
-      if (profErr) throw profErr;
-
-      track('standards_declared', { count: payload.length });
-      await refreshProfile();
+      track('standards_declared', { count: payload.length, path: assignedPath.id });
       router.replace('/(onboarding)/paywall');
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Could not save.';
@@ -84,20 +104,73 @@ export default function Standards() {
 
   return (
     <View className="flex-1 bg-charcoal">
-      <ScrollView contentContainerClassName="px-6 pt-24 pb-12">
-        <Text className="font-display text-ivory text-3xl tracking-wide">
-          State your standards
+      <ScrollView contentContainerClassName="mx-auto w-full max-w-3xl px-6 pt-16 pb-12">
+        <Text className="font-body text-brass text-xs tracking-widest">
+          ONBOARDING DIAGNOSTIC
         </Text>
-        <Text className="mt-3 font-body text-ivory-dim text-sm leading-5">
-          These are visible on your profile. You can revise them — but every
-          revision is logged. The table sees who's actually moving.
+        <Text className="mt-2 font-display text-ivory text-3xl tracking-wide">
+          Find your first campaign.
+        </Text>
+        <Text className="mt-3 font-body text-ivory-dim text-sm leading-6">
+          Score where you need the most pressure. Your answers assign a path
+          for the first 90 days. Then declare the standards the room can hold
+          you to.
         </Text>
 
-        <View className="mt-8 gap-5">
+        <View className="mt-8 rounded-2xl border border-brass/30 bg-brass/10 p-5">
+          <Text className="font-body text-brass text-xs tracking-widest">
+            ASSIGNED PATH
+          </Text>
+          <Text className="mt-2 font-display text-ivory text-2xl">
+            {assignedPath.title}
+          </Text>
+          <Text className="mt-2 font-body text-ivory-dim text-sm leading-6">
+            {assignedPath.promise}
+          </Text>
+        </View>
+
+        <View className="mt-8 gap-4">
+          {DIAGNOSTIC_ITEMS.map(([key, label]) => (
+            <View key={key} className="rounded-xl border border-ivory-dim/15 bg-charcoal-800 p-4">
+              <Text className="font-body text-ivory text-sm">{label}</Text>
+              <Text className="mt-1 font-body text-ivory-dim text-xs">
+                0 = stable, 5 = needs immediate pressure
+              </Text>
+              <View className="mt-3 flex-row gap-2">
+                {[0, 1, 2, 3, 4, 5].map((score) => (
+                  <Pressable
+                    key={score}
+                    onPress={() => setDiagnostic((prev) => ({ ...prev, [key]: score }))}
+                    className={`h-9 flex-1 items-center justify-center rounded-lg border ${
+                      diagnostic[key] === score
+                        ? 'border-brass bg-brass/20'
+                        : 'border-ivory-dim/20'
+                    }`}
+                  >
+                    <Text
+                      className={
+                        diagnostic[key] === score
+                          ? 'font-body text-brass text-xs'
+                          : 'font-body text-ivory-dim text-xs'
+                      }
+                    >
+                      {score}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+          ))}
+        </View>
+
+        <View className="mt-10 gap-5">
+          <Text className="font-body text-ivory-dim text-xs tracking-widest">
+            DECLARE 1-5 STANDARDS
+          </Text>
           {rows.map((row, i) => (
-            <View key={i} className="rounded-xl border border-ivory-dim/15 bg-charcoal-50 p-4">
+            <View key={i} className="rounded-xl border border-ivory-dim/15 bg-charcoal-800 p-4">
               <View className="flex-row flex-wrap gap-2">
-                {PILLARS.map((p) => (
+                {PILLAR_OPTIONS.map((p) => (
                   <Pressable
                     key={p}
                     onPress={() => updateRow(i, { pillar: p })}
@@ -121,7 +194,7 @@ export default function Standards() {
               <TextInput
                 value={row.statement}
                 onChangeText={(t) => updateRow(i, { statement: t.slice(0, MAX_CHARS) })}
-                placeholder="Train six days a week. No exceptions."
+                placeholder="I keep my word when no one is watching."
                 placeholderTextColor="#7A7466"
                 multiline
                 className="mt-4 min-h-[64px] font-body text-ivory text-base leading-6"
@@ -145,7 +218,7 @@ export default function Standards() {
               className="rounded-xl border border-dashed border-ivory-dim/30 px-4 py-4"
             >
               <Text className="text-center font-body text-ivory-dim text-sm">
-                + Add another standard ({rows.length}/{MAX_ROWS})
+                Add another standard ({rows.length}/{MAX_ROWS})
               </Text>
             </Pressable>
           )}
@@ -156,10 +229,10 @@ export default function Standards() {
         <Pressable
           onPress={onDeclare}
           disabled={!valid || saving}
-          className="rounded-xl bg-brass px-6 py-4 active:opacity-80 disabled:opacity-30"
+          className="mx-auto w-full max-w-3xl rounded-xl bg-brass px-6 py-4 active:opacity-80 disabled:opacity-30"
         >
           <Text className="text-center font-display text-charcoal text-base tracking-wider">
-            {saving ? 'DECLARING…' : 'DECLARE'}
+            {saving ? 'ASSIGNING...' : 'ACCEPT PATH AND DECLARE'}
           </Text>
         </Pressable>
       </View>

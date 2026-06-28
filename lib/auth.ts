@@ -12,6 +12,7 @@ import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from './supabase';
 import { identifyRevenueCat, logoutRevenueCat, getCurrentTier } from './revenuecat';
 import type { TierId } from './tiers';
+import type { TransformationPathId } from './roundTableModel';
 
 export type RitualStep = 'brief' | 'code' | 'standards' | 'paywall' | 'complete';
 
@@ -21,6 +22,7 @@ export type Profile = {
   honor_code_signed_at: string | null;
   standards_declared_at: string | null;
   cohort: string | null;
+  transformation_path: TransformationPathId | null;
 };
 
 type AuthState = {
@@ -29,11 +31,19 @@ type AuthState = {
   user: User | null;
   profile: Profile | null;
   tier: TierId | null;
+  /**
+   * Demo mode: front-end-only session that lets us walk through the ritual
+   * + app shell without a real Supabase project. NEVER set in production.
+   */
+  demo: boolean;
   hydrate: () => Promise<void>;
   setSession: (s: Session | null) => Promise<void>;
   refreshProfile: () => Promise<void>;
   refreshTier: () => Promise<void>;
   signOut: () => Promise<void>;
+  startDemo: () => void;
+  exitDemo: () => void;
+  demoAdvance: (patch: Partial<Profile> & { tier?: TierId | null }) => void;
 };
 
 export const useAuth = create<AuthState>((set, get) => ({
@@ -42,13 +52,20 @@ export const useAuth = create<AuthState>((set, get) => ({
   user: null,
   profile: null,
   tier: null,
+  demo: false,
 
   async hydrate() {
+    // Demo mode owns the state — don't let Supabase clobber it.
+    if (get().demo) {
+      set({ loading: false });
+      return;
+    }
     const { data } = await supabase.auth.getSession();
     await get().setSession(data.session);
     set({ loading: false });
 
     supabase.auth.onAuthStateChange((_event, session) => {
+      if (get().demo) return;
       void get().setSession(session);
     });
   },
@@ -71,7 +88,8 @@ export const useAuth = create<AuthState>((set, get) => ({
       .select('id, display_name, honor_code_signed_at, standards_declared_at, cohort')
       .eq('id', userId)
       .maybeSingle();
-    set({ profile: (data as Profile) ?? null });
+    const profile = data ? ({ ...(data as Omit<Profile, 'transformation_path'>), transformation_path: null }) : null;
+    set({ profile });
   },
 
   async refreshTier() {
@@ -80,9 +98,65 @@ export const useAuth = create<AuthState>((set, get) => ({
   },
 
   async signOut() {
+    if (get().demo) {
+      get().exitDemo();
+      return;
+    }
     await supabase.auth.signOut();
     await logoutRevenueCat();
     set({ session: null, user: null, profile: null, tier: null });
+  },
+
+  startDemo() {
+    const demoUserId = 'demo-user-00000000-0000-0000-0000-000000000000';
+    // Cast: a Session is a complex Supabase type; the AuthRouter only checks
+    // truthiness + user.id, so a minimal stub suffices.
+    const fakeSession = {
+      access_token: 'demo',
+      refresh_token: 'demo',
+      expires_in: 3600,
+      token_type: 'bearer',
+      user: { id: demoUserId, email: 'demo@roundtable.app' },
+    } as unknown as Session;
+    // Profile starts null so the router routes us to /brief first —
+    // brief.tsx will materialize the profile via demoAdvance.
+    set({
+      demo: true,
+      loading: false,
+      session: fakeSession,
+      user: fakeSession.user,
+      profile: null,
+      tier: null,
+    });
+  },
+
+  exitDemo() {
+    set({
+      demo: false,
+      session: null,
+      user: null,
+      profile: null,
+      tier: null,
+    });
+  },
+
+  demoAdvance(patch) {
+    const { profile, tier, user } = get();
+    const { tier: nextTier, ...profilePatch } = patch;
+    // If no profile exists yet, materialize one from the demo user — this
+    // is the brief.tsx → code.tsx hand-off.
+    const base: Profile = profile ?? {
+      id: user?.id ?? 'demo',
+      display_name: 'Founding Member',
+      honor_code_signed_at: null,
+      standards_declared_at: null,
+      cohort: 'founding_2026',
+      transformation_path: null,
+    };
+    set({
+      profile: { ...base, ...profilePatch },
+      tier: nextTier !== undefined ? nextTier : tier,
+    });
   },
 }));
 

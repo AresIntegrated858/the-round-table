@@ -7,7 +7,7 @@
  */
 import { env } from './env';
 
-export type TierId = 'new_member' | 'knight' | 'council';
+export type TierId = 'member' | 'command' | 'council';
 
 export type TierDef = {
   id: TierId;
@@ -28,42 +28,42 @@ export type TierDef = {
 };
 
 export const TIERS: Record<TierId, TierDef> = {
-  new_member: {
-    id: 'new_member',
-    name: 'New Member',
+  member: {
+    id: 'member',
+    name: 'Member',
     entitlement: env.RC_ENTITLEMENT_NEW_MEMBER,
-    tagline: 'Cross the threshold. Sit at the table.',
-    webMonthly: 20,
-    webAnnual: 200,
-    iapMonthly: 24.99,
-    iapAnnual: 239.99,
+    tagline: 'The founding seat. The room, the oath, the mission.',
+    webMonthly: 25,
+    webAnnual: 250,
+    iapMonthly: 29.99,
+    iapAnnual: 299.99,
     order: 1,
   },
-  knight: {
-    id: 'knight',
-    name: 'Knight',
+  command: {
+    id: 'command',
+    name: 'Command',
     entitlement: env.RC_ENTITLEMENT_KNIGHT,
-    tagline: 'Full library, full challenges, full ladder.',
-    webMonthly: 30,
-    webAnnual: 300,
-    iapMonthly: 34.99,
-    iapAnnual: 339.99,
+    tagline: 'Full pillar access, deeper tracking, stronger accountability.',
+    webMonthly: 50,
+    webAnnual: 500,
+    iapMonthly: 59.99,
+    iapAnnual: 599.99,
     order: 2,
   },
   council: {
     id: 'council',
     name: 'Council',
     entitlement: env.RC_ENTITLEMENT_COUNCIL,
-    tagline: 'Access to the men, not just the content.',
-    webMonthly: 50,
-    webAnnual: 500,
-    iapMonthly: 54.99,
-    iapAnnual: 549.99,
+    tagline: 'Advanced access for men carrying bigger responsibility.',
+    webMonthly: 100,
+    webAnnual: 1000,
+    iapMonthly: 119.99,
+    iapAnnual: 1199.99,
     order: 3,
   },
 };
 
-export const TIER_ORDER: TierId[] = ['new_member', 'knight', 'council'];
+export const TIER_ORDER: TierId[] = ['member', 'command', 'council'];
 
 /** Does tier A satisfy a gate requiring tier B? */
 export function tierMeets(have: TierId | null, required: TierId): boolean {

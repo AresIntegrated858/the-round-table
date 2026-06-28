@@ -2,6 +2,8 @@
 
 > Anchored to `discovery-notes.md`. PDF is canonical; founder voice is John Maciel's.
 
+> **2026-06-27 founder override:** Current launch model is documented in `docs/round-table-operating-model.md` and `docs/superpowers/specs/2026-06-27-round-table-mvp-design.md`. The approved first version is a responsive mobile-native web MVP for young men roughly 18-27, application-only, $25/month founding subscription, 90-day minimum commitment, Member / Command / Council tier language, and a council of John Maciel, Manny Thompson, Chase Grafton, and Erik Sims. Older references below to $20, New Member / Knight / Council, Sean Love, or Chase being removed are retained as historical planning context and are superseded by this override.
+
 ---
 
 ## 1. Vision

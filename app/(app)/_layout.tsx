@@ -3,9 +3,10 @@ import { Text } from 'react-native';
 
 /**
  * Authenticated app shell. v1 surfaces:
- *   - Feed (primary, ungated)
- *   - Library (tier-gated content)
- *   - Standards (member's own check-ins + standards review)
+ *   - Command (member home)
+ *   - Missions (First Campaign)
+ *   - Pillars (topic and local table hub)
+ *   - Standards (oath, scorecard, progress)
  *   - Settings (subscription, account deletion, sign out)
  */
 export default function AppLayout() {
@@ -25,14 +26,21 @@ export default function AppLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'TABLE',
+          title: 'COMMAND',
           tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>◆</Text>,
+        }}
+      />
+      <Tabs.Screen
+        name="missions"
+        options={{
+          title: 'MISSIONS',
+          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>✱</Text>,
         }}
       />
       <Tabs.Screen
         name="library"
         options={{
-          title: 'LIBRARY',
+          title: 'PILLARS',
           tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>◇</Text>,
         }}
       />
@@ -40,7 +48,7 @@ export default function AppLayout() {
         name="standards"
         options={{
           title: 'STANDARDS',
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>✱</Text>,
+          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>□</Text>,
         }}
       />
       <Tabs.Screen
@@ -48,6 +56,13 @@ export default function AppLayout() {
         options={{
           title: 'SETTINGS',
           tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>≡</Text>,
+        }}
+      />
+      <Tabs.Screen
+        name="review"
+        options={{
+          title: 'REVIEW',
+          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>◉</Text>,
         }}
       />
     </Tabs>

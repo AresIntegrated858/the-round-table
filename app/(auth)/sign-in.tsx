@@ -38,7 +38,6 @@ export default function SignIn() {
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Could not send link.';
       if (Platform.OS === 'web') {
-        // eslint-disable-next-line no-alert
         window.alert(msg);
       } else {
         Alert.alert('Could not send link', msg);
@@ -78,7 +77,7 @@ export default function SignIn() {
             autoCapitalize="none"
             autoComplete="email"
             keyboardType="email-address"
-            className="rounded-xl border border-ivory-dim/20 bg-charcoal-50 px-4 py-4 font-body text-ivory"
+            className="rounded-xl border border-ivory-dim/20 bg-charcoal-800 px-4 py-4 font-body text-ivory"
           />
           <Pressable
             disabled={sending || !email.trim()}

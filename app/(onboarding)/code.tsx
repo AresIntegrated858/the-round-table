@@ -15,7 +15,10 @@ import { ScrollGate } from '@/components/ScrollGate';
  */
 export default function Code() {
   const router = useRouter();
-  const { user, refreshProfile } = useAuth();
+  const user = useAuth((s) => s.user);
+  const refreshProfile = useAuth((s) => s.refreshProfile);
+  const demo = useAuth((s) => s.demo);
+  const demoAdvance = useAuth((s) => s.demoAdvance);
   const [readEnd, setReadEnd] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -23,13 +26,18 @@ export default function Code() {
     if (!user || !readEnd) return;
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ honor_code_signed_at: new Date().toISOString() })
-        .eq('id', user.id);
-      if (error) throw error;
+      const stamp = new Date().toISOString();
+      if (demo) {
+        demoAdvance({ honor_code_signed_at: stamp });
+      } else {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ honor_code_signed_at: stamp })
+          .eq('id', user.id);
+        if (error) throw error;
+        await refreshProfile();
+      }
       track('code_agreed');
-      await refreshProfile();
       router.replace('/(onboarding)/standards');
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Could not save.';
@@ -52,7 +60,7 @@ export default function Code() {
 
         <Section title="At the Round Table, we:">
           <Bullet>
-            Show up. Check-ins, challenges, threads — we participate, we don't lurk.
+            Show up. Check-ins, challenges, threads — we participate, we do not lurk.
           </Bullet>
           <Bullet>Speak directly. No empty motivation, no fake performance.</Bullet>
           <Bullet>Sharpen each other. Feedback is given honestly and received without ego.</Bullet>
@@ -63,7 +71,7 @@ export default function Code() {
         <Section title="We do not:">
           <Bullet>Bash women, partners, or anyone outside the room.</Bullet>
           <Bullet>Pitch get-rich-quick schemes, MLMs, or affiliate funnels.</Bullet>
-          <Bullet>Give medical, financial, or legal advice we wouldn't sign our name to.</Bullet>
+          <Bullet>Give medical, financial, or legal advice we would not sign our name to.</Bullet>
           <Bullet>Tolerate political tribalism inside the rooms.</Bullet>
           <Bullet>Trade tier dues for influence — no one buys a louder voice.</Bullet>
         </Section>

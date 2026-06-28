@@ -11,18 +11,27 @@ import { track } from '@/lib/posthog';
  */
 export default function Brief() {
   const router = useRouter();
-  const { user, refreshProfile } = useAuth();
+  const user = useAuth((s) => s.user);
+  const refreshProfile = useAuth((s) => s.refreshProfile);
+
+  const demo = useAuth((s) => s.demo);
+  const demoAdvance = useAuth((s) => s.demoAdvance);
 
   async function onContinue() {
     if (!user) return;
-    // Ensure profile row exists. honor_code_signed_at and standards_declared_at
-    // remain null — those are set by the next steps.
-    await supabase.from('profiles').upsert(
-      { id: user.id, display_name: null },
-      { onConflict: 'id' },
-    );
     track('brief_continued');
-    await refreshProfile();
+    if (demo) {
+      // Materialize the profile so the AuthRouter advances past /brief.
+      demoAdvance({});
+    } else {
+      // Ensure profile row exists. honor_code_signed_at and standards_declared_at
+      // remain null — those are set by the next steps.
+      await supabase.from('profiles').upsert(
+        { id: user.id, display_name: null },
+        { onConflict: 'id' },
+      );
+      await refreshProfile();
+    }
     router.replace('/(onboarding)/code');
   }
 
@@ -39,24 +48,25 @@ export default function Brief() {
             app.
           </P>
           <P>
-            Most men have fewer than two people they can rely on. Most never
-            talk about money or goals with their friends. We exist to change
-            that — through standards, not slogans.
+            You were approved because you are serious enough to be tested by a
+            room with standards. The founding seat is $25/month with a 90-day
+            minimum commitment. Low-ticket does not mean low-standard.
           </P>
           <P>
-            Seven domains: fitness, investing, style, relationship building,
-            time management, business building, leadership.
+            Brotherhood is the umbrella. Under it: body, money, style,
+            relationships, time, business, leadership, communication, mental
+            discipline, and high-value networking.
           </P>
           <P>
-            Four men leading the rooms: John Maciel, Manny Thompson, Erik Sims,
-            Sean Love.
+            The council: John Maciel, Manny Thompson, Chase Grafton, and Erik
+            Sims.
           </P>
           <P>
-            One operating premise: men helping men, on the same journey, at a
-            higher standard.
+            One operating premise: men helping men build command over life
+            through action, accountability, and high-ROI relationships.
           </P>
           <P className="text-ivory-dim italic">
-            If that's not what you came for, the door is to your right.
+            If this is not what you came for, the door is to your right.
           </P>
         </View>
       </ScrollView>

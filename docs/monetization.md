@@ -2,6 +2,8 @@
 
 > Anchored to user intake (3 tiers, $20 / $30 / $50). Web pays via Stripe; iOS via Apple IAP; Android via Google Play Billing. Entitlements unified via RevenueCat.
 
+> **2026-06-27 founder override:** Current approved founding offer is $25/month, application approval before payment, 90-day minimum commitment, month-to-month after 90 days, and lifetime founding price lock while active. Tier language is Member / Command / Council. Older $20 / $30 / $50 New Member / Knight / Council details below are historical planning context until this document is fully revised against the current model.
+
 ---
 
 ## 1. Tier structure
