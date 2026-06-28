@@ -48,6 +48,7 @@ yarn-error.*
 # build artifacts
 build/
 *.log
+.playwright-cli/
 
 # IDE
 .idea/
