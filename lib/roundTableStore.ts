@@ -1,6 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
-import { createJSONStorage, persist } from 'zustand/middleware';
 import {
   addCheckIn,
   addBrotherhoodRequest,
@@ -75,72 +74,121 @@ type RoundTableStore = OpsState & {
 };
 
 const initial = createInitialOpsState();
+const initialApplication: RoundTableStore['application'] = {
+  fullName: '',
+  cityState: '',
+  age: '',
+  strongest: '',
+  weakest: '',
+  tolerating: '',
+  why: '',
+  status: 'draft',
+};
+const persistKey = 'round-table-ops-v1';
+
+type PersistedRoundTableState = OpsState & {
+  application: RoundTableStore['application'];
+};
+
+function selectPersistedState(state: RoundTableStore): PersistedRoundTableState {
+  return {
+    seatStatus: state.seatStatus,
+    oath: state.oath,
+    campaignPhases: state.campaignPhases,
+    sundayPlan: state.sundayPlan,
+    missionActions: state.missionActions,
+    checkIns: state.checkIns,
+    scores: state.scores,
+    localTable: state.localTable,
+    wins: state.wins,
+    warRoomPosts: state.warRoomPosts,
+    proofPosts: state.proofPosts,
+    brotherhoodRequests: state.brotherhoodRequests,
+    localConnectionIntents: state.localConnectionIntents,
+    councilReviewItems: state.councilReviewItems,
+    application: state.application,
+  };
+}
 
 export const useRoundTableStore = create<RoundTableStore>()(
-  persist(
-    (set, get) => ({
-      ...initial,
-      application: {
-        fullName: '',
-        cityState: '',
-        age: '',
-        strongest: '',
-        weakest: '',
-        tolerating: '',
-        why: '',
-        status: 'draft',
-      },
-      saveApplication: (application) => set({ application }),
-      setApplicationStatus: (status) =>
-        set((state) => ({ application: { ...state.application, status } })),
-      setSeatStatus: (seatStatus) => set((state) => setSeatStatus(state, seatStatus)),
-      acceptOath: (declaration) => set((state) => acceptOath(state, declaration)),
-      completeCampaignPhase: (phaseId, proof) =>
-        set((state) => completeCampaignPhase(state, phaseId, proof)),
-      saveSundayPlan: (plan) => set((state) => saveSundayPlan(state, plan)),
-      completeMissionAction: (actionId, completed) =>
-        set((state) => completeMissionAction(state, actionId, completed)),
-      addCheckIn: (pillar, body) => set((state) => addCheckIn(state, pillar, body)),
-      setPillarScore: (pillar, score) =>
-        set((state) => setPillarScore(state, pillar, score)),
-      selectLocalTable: (region) => set((state) => selectLocalTable(state, region)),
-      addWin: (win) => set((state) => addWin(state, win)),
-      addWarRoomPost: (post) => set((state) => addWarRoomPost(state, post)),
-      addProofPost: (proof) => set((state) => addProofPost(state, proof)),
-      addBrotherhoodRequest: (request) =>
-        set((state) => addBrotherhoodRequest(state, request)),
-      addLocalConnectionIntent: (intent) =>
-        set((state) => addLocalConnectionIntent(state, intent)),
-      addCouncilReviewItem: (item) => set((state) => addCouncilReviewItem(state, item)),
-      resolveCouncilReviewItem: (itemId, status) =>
-        set((state) => resolveCouncilReviewItem(state, itemId, status)),
-      brotherCard: () => buildBrotherCard(get(), get().application),
-      rankings: () => {
-        const card = buildBrotherCard(get(), get().application);
-        return calculateMonthlyRankings([
-          card,
-          {
-            ...card,
-            displayName: 'The Standard Setter',
-            commandScore: Math.max(0, card.commandScore - 8),
-            proofCount: Math.max(0, card.proofCount - 1),
-            contributionCount: card.contributionCount + 1,
-          },
-          {
-            ...card,
-            displayName: 'The Local Builder',
-            commandScore: Math.max(0, card.commandScore - 14),
-            proofCount: card.proofCount,
-            contributionCount: card.contributionCount + 2,
-          },
-        ]);
-      },
-      commandScore: () => calculateCommandScore(get()),
-      resetOps: () => set(createInitialOpsState()),
-    }),
-    {
-      name: 'round-table-ops-v1',
-      storage: createJSONStorage(() => AsyncStorage),
+  (set, get) => ({
+    ...initial,
+    application: initialApplication,
+    saveApplication: (application) => set({ application }),
+    setApplicationStatus: (status) =>
+      set((state) => ({ application: { ...state.application, status } })),
+    setSeatStatus: (seatStatus) => set((state) => setSeatStatus(state, seatStatus)),
+    acceptOath: (declaration) => set((state) => acceptOath(state, declaration)),
+    completeCampaignPhase: (phaseId, proof) =>
+      set((state) => completeCampaignPhase(state, phaseId, proof)),
+    saveSundayPlan: (plan) => set((state) => saveSundayPlan(state, plan)),
+    completeMissionAction: (actionId, completed) =>
+      set((state) => completeMissionAction(state, actionId, completed)),
+    addCheckIn: (pillar, body) => set((state) => addCheckIn(state, pillar, body)),
+    setPillarScore: (pillar, score) =>
+      set((state) => setPillarScore(state, pillar, score)),
+    selectLocalTable: (region) => set((state) => selectLocalTable(state, region)),
+    addWin: (win) => set((state) => addWin(state, win)),
+    addWarRoomPost: (post) => set((state) => addWarRoomPost(state, post)),
+    addProofPost: (proof) => set((state) => addProofPost(state, proof)),
+    addBrotherhoodRequest: (request) =>
+      set((state) => addBrotherhoodRequest(state, request)),
+    addLocalConnectionIntent: (intent) =>
+      set((state) => addLocalConnectionIntent(state, intent)),
+    addCouncilReviewItem: (item) => set((state) => addCouncilReviewItem(state, item)),
+    resolveCouncilReviewItem: (itemId, status) =>
+      set((state) => resolveCouncilReviewItem(state, itemId, status)),
+    brotherCard: () => buildBrotherCard(get(), get().application),
+    rankings: () => {
+      const card = buildBrotherCard(get(), get().application);
+      return calculateMonthlyRankings([
+        card,
+        {
+          ...card,
+          displayName: 'The Standard Setter',
+          commandScore: Math.max(0, card.commandScore - 8),
+          proofCount: Math.max(0, card.proofCount - 1),
+          contributionCount: card.contributionCount + 1,
+        },
+        {
+          ...card,
+          displayName: 'The Local Builder',
+          commandScore: Math.max(0, card.commandScore - 14),
+          proofCount: card.proofCount,
+          contributionCount: card.contributionCount + 2,
+        },
+      ]);
     },
-  ),
+    commandScore: () => calculateCommandScore(get()),
+    resetOps: () => set(createInitialOpsState()),
+  }),
 );
+
+let hasHydrated = false;
+
+void AsyncStorage.getItem(persistKey)
+  .then((value) => {
+    if (!value) return;
+    const parsed = JSON.parse(value) as Partial<PersistedRoundTableState>;
+
+    useRoundTableStore.setState((state) => ({
+      ...parsed,
+      oath: { ...state.oath, ...parsed.oath },
+      campaignPhases: { ...state.campaignPhases, ...parsed.campaignPhases },
+      sundayPlan: { ...state.sundayPlan, ...parsed.sundayPlan },
+      missionActions: { ...state.missionActions, ...parsed.missionActions },
+      scores: { ...state.scores, ...parsed.scores },
+      application: parsed.application
+        ? { ...state.application, ...parsed.application }
+        : state.application,
+    }));
+  })
+  .catch(() => undefined)
+  .finally(() => {
+    hasHydrated = true;
+  });
+
+useRoundTableStore.subscribe((state) => {
+  if (!hasHydrated) return;
+  void AsyncStorage.setItem(persistKey, JSON.stringify(selectPersistedState(state)));
+});
