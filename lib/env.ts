@@ -29,9 +29,29 @@ type ClientEnv = {
   SUPPORT_EMAIL: string;
 };
 
-function read(key: string, fallback = ''): string {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const v = (process.env as any)[key];
+const publicEnv = {
+  EXPO_PUBLIC_ENV: process.env.EXPO_PUBLIC_ENV,
+  EXPO_PUBLIC_SUPABASE_URL: process.env.EXPO_PUBLIC_SUPABASE_URL,
+  EXPO_PUBLIC_SUPABASE_ANON_KEY: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
+  EXPO_PUBLIC_RC_IOS_API_KEY: process.env.EXPO_PUBLIC_RC_IOS_API_KEY,
+  EXPO_PUBLIC_RC_ANDROID_API_KEY: process.env.EXPO_PUBLIC_RC_ANDROID_API_KEY,
+  EXPO_PUBLIC_RC_STRIPE_API_KEY: process.env.EXPO_PUBLIC_RC_STRIPE_API_KEY,
+  EXPO_PUBLIC_RC_ENTITLEMENT_NEW_MEMBER: process.env.EXPO_PUBLIC_RC_ENTITLEMENT_NEW_MEMBER,
+  EXPO_PUBLIC_RC_ENTITLEMENT_KNIGHT: process.env.EXPO_PUBLIC_RC_ENTITLEMENT_KNIGHT,
+  EXPO_PUBLIC_RC_ENTITLEMENT_COUNCIL: process.env.EXPO_PUBLIC_RC_ENTITLEMENT_COUNCIL,
+  EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY: process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+  EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+  EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+  EXPO_PUBLIC_SENTRY_DSN: process.env.EXPO_PUBLIC_SENTRY_DSN,
+  EXPO_PUBLIC_POSTHOG_API_KEY: process.env.EXPO_PUBLIC_POSTHOG_API_KEY,
+  EXPO_PUBLIC_POSTHOG_HOST: process.env.EXPO_PUBLIC_POSTHOG_HOST,
+  EXPO_PUBLIC_APP_URL: process.env.EXPO_PUBLIC_APP_URL,
+  EXPO_PUBLIC_MARKETING_URL: process.env.EXPO_PUBLIC_MARKETING_URL,
+  EXPO_PUBLIC_SUPPORT_EMAIL: process.env.EXPO_PUBLIC_SUPPORT_EMAIL,
+};
+
+function read(key: keyof typeof publicEnv, fallback = ''): string {
+  const v = publicEnv[key];
   if (!v && __DEV__ && !fallback) {
     // eslint-disable-next-line no-console
     console.warn(`[env] Missing ${key} — using empty string. Set in .env.`);
