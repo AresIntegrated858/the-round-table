@@ -17,8 +17,33 @@ import { track } from '@/lib/posthog';
 export default function SignIn() {
   const router = useRouter();
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [sending, setSending] = useState(false);
+  const [signingIn, setSigningIn] = useState(false);
   const [sent, setSent] = useState(false);
+
+  async function signInWithPassword() {
+    if (!email.trim() || !password) return;
+    setSigningIn(true);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
+      });
+      if (error) throw error;
+      track('signup_started', { method: 'password' });
+      router.replace('/(app)');
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Could not sign in.';
+      if (Platform.OS === 'web') {
+        window.alert(msg);
+      } else {
+        Alert.alert('Could not sign in', msg);
+      }
+    } finally {
+      setSigningIn(false);
+    }
+  }
 
   async function sendMagicLink() {
     if (!email.trim()) return;
@@ -79,12 +104,31 @@ export default function SignIn() {
             keyboardType="email-address"
             className="rounded-xl border border-ivory-dim/20 bg-charcoal-800 px-4 py-4 font-body text-ivory"
           />
+          <TextInput
+            value={password}
+            onChangeText={setPassword}
+            placeholder="Password"
+            placeholderTextColor="#7A7466"
+            autoCapitalize="none"
+            autoComplete="password"
+            secureTextEntry
+            className="rounded-xl border border-ivory-dim/20 bg-charcoal-800 px-4 py-4 font-body text-ivory"
+          />
           <Pressable
-            disabled={sending || !email.trim()}
-            onPress={sendMagicLink}
+            disabled={signingIn || !email.trim() || !password}
+            onPress={signInWithPassword}
             className="rounded-xl bg-brass px-6 py-4 active:opacity-80 disabled:opacity-40"
           >
             <Text className="text-center font-display text-charcoal text-base tracking-wider">
+              {signingIn ? 'ENTERING…' : 'SIGN IN'}
+            </Text>
+          </Pressable>
+          <Pressable
+            disabled={sending || !email.trim()}
+            onPress={sendMagicLink}
+            className="rounded-xl border border-brass/40 px-6 py-4 active:opacity-80 disabled:opacity-40"
+          >
+            <Text className="text-center font-display text-brass text-base tracking-wider">
               {sending ? 'SENDING…' : 'SEND LINK'}
             </Text>
           </Pressable>

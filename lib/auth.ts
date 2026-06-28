@@ -23,6 +23,7 @@ export type Profile = {
   standards_declared_at: string | null;
   cohort: string | null;
   transformation_path: TransformationPathId | null;
+  is_admin: boolean;
 };
 
 type AuthState = {
@@ -74,7 +75,8 @@ export const useAuth = create<AuthState>((set, get) => ({
     set({ session, user: session?.user ?? null });
     if (session?.user) {
       await identifyRevenueCat(session.user.id);
-      await Promise.all([get().refreshProfile(), get().refreshTier()]);
+      await get().refreshProfile();
+      await get().refreshTier();
     } else {
       set({ profile: null, tier: null });
     }
@@ -85,14 +87,18 @@ export const useAuth = create<AuthState>((set, get) => ({
     if (!userId) return;
     const { data } = await supabase
       .from('profiles')
-      .select('id, display_name, honor_code_signed_at, standards_declared_at, cohort')
+      .select('id, display_name, honor_code_signed_at, standards_declared_at, cohort, is_admin')
       .eq('id', userId)
       .maybeSingle();
     const profile = data ? ({ ...(data as Omit<Profile, 'transformation_path'>), transformation_path: null }) : null;
-    set({ profile });
+    set({ profile, tier: profile?.is_admin ? 'council' : get().tier });
   },
 
   async refreshTier() {
+    if (get().profile?.is_admin) {
+      set({ tier: 'council' });
+      return;
+    }
     const tier = await getCurrentTier();
     set({ tier });
   },
@@ -152,6 +158,7 @@ export const useAuth = create<AuthState>((set, get) => ({
       standards_declared_at: null,
       cohort: 'founding_2026',
       transformation_path: null,
+      is_admin: false,
     };
     set({
       profile: { ...base, ...profilePatch },
