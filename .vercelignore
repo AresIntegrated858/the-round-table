@@ -1,0 +1,8 @@
+.claude/
+.playwright-cli/
+.env
+.env.*
+.expo/
+.vercel/
+node_modules/
+dist/
